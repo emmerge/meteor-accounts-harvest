@@ -41,8 +41,7 @@
                     client_id: config.clientId,
                     client_secret: config.secret,
                     redirect_uri: Meteor.absoluteUrl("_oauth/harvest?close"),
-                    grant_type: 'authorization_code',
-                    state: query.state
+                    grant_type: 'authorization_code'
                 }
             });
         if (result.error) // if the http response was an error
