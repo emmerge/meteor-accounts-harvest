@@ -19,9 +19,8 @@
             'https://api.harvestapp.com/oauth2/authorize' +
                 '?client_id=' + config.clientId +
                 '&redirect_uri=' + Meteor.absoluteUrl('_oauth/harvest?close=close') +
-                '&response_type=code'+
-                '&state=' + state;
-        ;
+                '&state=' + state &
+                '&response_type=code';
 
         Accounts.oauth.initiateLogin(state, loginUrl, callback);
     };

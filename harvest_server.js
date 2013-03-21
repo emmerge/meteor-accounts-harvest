@@ -31,14 +31,20 @@
             throw new Accounts.ConfigError("Service not configured");
 
         var result = Meteor.http.post(
-            "https://api.harvestapp.com/oauth2/token", {headers: {Accept: 'application/json'}, params: {
-                code: query.code,
-                client_id: config.clientId,
-                client_secret: config.secret,
-                redirect_uri: Meteor.absoluteUrl("_oauth/harvest?close"),
-                grant_type: 'authorization_code',
-                state: query.state
-            }});
+            "https://api.harvestapp.com/oauth2/token", {
+                headers: {
+                    Accept: 'application/json',
+                    "content-type": "application/x-www-form-urlencoded"
+                },
+                params: {
+                    code: query.code,
+                    client_id: config.clientId,
+                    client_secret: config.secret,
+                    redirect_uri: Meteor.absoluteUrl("_oauth/harvest?close"),
+                    grant_type: 'authorization_code',
+                    state: query.state
+                }
+            });
         if (result.error) // if the http response was an error
             throw result.error;
         if (result.data.error) // if the http response was a json object with an error attribute
