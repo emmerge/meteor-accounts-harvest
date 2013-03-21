@@ -32,11 +32,11 @@
 
         var result = Meteor.http.post(
             "https://api.harvestapp.com/oauth2/token", {headers: {Accept: 'application/json'}, params: {
-                grant_type: 'authorization_code',
                 code: query.code,
                 client_id: config.clientId,
                 client_secret: config.secret,
                 redirect_uri: Meteor.absoluteUrl("_oauth/harvest?close"),
+                grant_type: 'authorization_code',
                 state: query.state
             }});
         if (result.error) // if the http response was an error
