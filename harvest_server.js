@@ -34,7 +34,7 @@
             "https://api.harvestapp.com/oauth2/token", {
                 headers: {
                     Accept: 'application/json',
-                    "content-type": "application/x-www-form-urlencoded"
+                    'content-type': 'application/x-www-form-urlencoded'
                 },
                 params: {
                     code: query.code,
