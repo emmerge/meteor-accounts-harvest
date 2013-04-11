@@ -18,7 +18,7 @@
         var loginUrl =
             'https://api.harvestapp.com/oauth2/authorize' +
                 '?client_id=' + config.clientId +
-                '&redirect_uri=' + Meteor.absoluteUrl('_oauth/harvest?close=close') +
+                '&redirect_uri=' + Meteor.absoluteUrl('_oauth/harvest?close') +
                 '&response_type=code';
 
         Accounts.oauth.initiateLogin(state, loginUrl, callback);
