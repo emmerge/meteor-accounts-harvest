@@ -6,20 +6,22 @@
 
         return {
             serviceData: {
-                id: identity.id,
+                id: identity.user.id,
                 accessToken: accessToken,
-                email: identity.email,
-                admin: identity.admin,
-                timestamp_timers: identity.timestamp_timers,
-                timezone: identity.timezone,
+                email: identity.user.email,
+                admin: identity.user.admin,
+                timestamp_timers: identity.user.timestamp_timers,
+                timezone: identity.user.timezone,
                 company: {
-                    "base-uri": identity.company.base-uri
+                    base_uri: identity.company.base_uri,
+                    name: identity.company.name,
+                    week_start_day: identity.company.week_start_day
                 }
             },
             options: {
                 profile: {
-                    id: user.id,
-                    name: identity.email
+                    id: identity.user.id,
+                    name: identity.user.email
                 }
             }
         };
