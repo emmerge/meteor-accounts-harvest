@@ -34,7 +34,6 @@
             "https://api.harvestapp.com/oauth2/token", {
                 headers: {
                     Accept: 'application/json',
-                    'content-type': 'application/x-www-form-urlencoded'
                 },
                 params: {
                     code: query.code,
@@ -53,8 +52,14 @@
 
     var getIdentity = function (accessToken) {
         var result = Meteor.http.get(
-            "https://api.harvestapp.com/account/who_am_i",
-            {params: {access_token: accessToken}});
+            "https://api.harvestapp.com/account/who_am_i", {
+                headers: {
+                    Accept: 'application/json',
+                },
+                params: {
+                    access_token: accessToken
+                }
+            });
         if (result.error)
             throw result.error;
         return result.data;
