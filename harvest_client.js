@@ -1,27 +1,46 @@
-(function () {
-    Meteor.loginWithHarvest = function (options, callback) {
-        if (!callback && typeof options === 'function') {
-            callback = options;
-            options = {};
-        }
+Harvest = {};
 
-        var config = Accounts.loginServiceConfiguration.findOne({
-            service: 'harvest'
-        });
-        if (!config) {
-            callback && callback(new Accounts.ConfigError("Service not configured"));
-            return;
-        }
+// Request Harvest credentials for the user
+// @param options {optional}
+// @param credentialRequestCompleteCallback {Function} Callback function to call on
+//   completion. Takes one argument, credentialToken on success, or Error on
+//   error.
+Harvest.requestCredential = function (options, credentialRequestCompleteCallback) {
+    // support both (options, callback) and (callback).
+    if (!credentialRequestCompleteCallback && typeof options === 'function') {
+        credentialRequestCompleteCallback = options;
+        options = {};
+    }
 
-        var state = Meteor.uuid();
+    var config = ServiceConfiguration.configurations.findOne({service: 'harvest'});
+    if (!config) {
+        credentialRequestCompleteCallback && credentialRequestCompleteCallback(
+            new ServiceConfiguration.ConfigError());
+        return;
+    }
 
-        var loginUrl =
-            'https://api.harvestapp.com/oauth2/authorize' +
-                '?client_id=' + config.clientId +
-                '&redirect_uri=' + Meteor.absoluteUrl('_oauth/harvest?close') +
-                '&response_type=code';
+    var scope = (options && options.requestPermissions) || [];
+    var flatScope = _.map(scope, encodeURIComponent).join(',');
 
-        Accounts.oauth.initiateLogin(state, loginUrl, callback);
-    };
+    var loginStyle = OAuth._loginStyle('harvest', config, options);
 
-})();
+    var redirectUri = OAuth._redirectUri('harvest', config);
+
+    var credentialToken = Random.id();
+    var loginUrl =
+        'https://api.harvestapp.com/oauth2/authorize' +
+        '?client_id=' + config.clientId +
+        '&redirect_uri=' + redirectUri +
+        '&response_type=code' +
+        '&state=' + OAuth._stateParam(loginStyle, credentialToken);
+
+    var height = 620;
+    OAuth.launchLogin({
+        loginService: 'harvest',
+        loginStyle: loginStyle,
+        loginUrl: loginUrl,
+        credentialRequestCompleteCallback: credentialRequestCompleteCallback,
+        credentialToken: credentialToken,
+        popupOptions: {width: 900, height: height}
+    });
+};

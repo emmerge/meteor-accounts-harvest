@@ -1,38 +1,47 @@
-(function () {
-    Accounts.oauth.registerService('harvest', 2, function(query) {
+Harvest = {};
 
-        var accessToken = getAccessToken(query);
-        var identity = getIdentity(accessToken);
+OAuth.registerService('harvest', 2, null, function(query) {
 
-        return {
-            serviceData: {
-                id: identity.user.id,
-                accessToken: accessToken,
-                email: identity.user.email,
-                admin: identity.user.admin,
-                timestamp_timers: identity.user.timestamp_timers,
-                timezone: identity.user.timezone,
-                company: {
-                    base_uri: identity.company.base_uri,
-                    name: identity.company.name,
-                    week_start_day: identity.company.week_start_day
-                }
-            },
-            options: {
-                profile: {
-                    id: identity.user.id,
-                    name: identity.user.email
-                }
+    var tokens = getTokens(query);
+    var identity = getIdentity(tokens.accessToken);
+
+    console.log(identity);
+
+    ret = {
+        serviceData: {
+            id: identity.user.id,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiresAt: (+new Date) + (1000 * tokens.expiresIn),
+            email: identity.user.email,
+            admin: identity.user.admin,
+            timestamp_timers: identity.user.timestamp_timers,
+            timezone: identity.user.timezone,
+            company: {
+                base_uri: identity.company.base_uri,
+                name: identity.company.name,
+                week_start_day: identity.company.week_start_day
             }
-        };
-    });
+        },
+        options: {
+            profile: {
+                id: identity.user.id,
+                name: identity.user.first_name + " " + identity.user.last_name
+            }
+        }
+    };
 
-    var getAccessToken = function (query) {
-        var config = Accounts.loginServiceConfiguration.findOne({service: 'harvest'});
-        if (!config)
-            throw new Accounts.ConfigError("Service not configured");
+    return ret;
+});
 
-        var result = Meteor.http.post(
+var getTokens = function (query) {
+    var config = ServiceConfiguration.configurations.findOne({service: 'harvest'});
+    if (!config)
+        throw new ServiceConfiguration.ConfigError();
+
+    var response;
+    try {
+        response = HTTP.post(
             "https://api.harvestapp.com/oauth2/token", {
                 headers: {
                     Accept: 'application/json',
@@ -41,29 +50,43 @@
                     code: query.code,
                     client_id: config.clientId,
                     client_secret: config.secret,
-                    redirect_uri: Meteor.absoluteUrl("_oauth/harvest?close"),
+                    redirect_uri: OAuth._redirectUri('harvest', config),
                     grant_type: 'authorization_code'
                 }
             });
-        if (result.error) // if the http response was an error
-            throw result.error;
-        if (result.data.error) // if the http response was a json object with an error attribute
-            throw result.data;
-        return result.data.access_token;
-    };
+    } catch (err) {
+        throw _.extend(new Error("Failed to complete OAuth handshake with Harvest. " + err.message),
+                {response: err.response});
+    }
 
-    var getIdentity = function (accessToken) {
-        var result = Meteor.http.get(
-            "https://api.harvestapp.com/account/who_am_i", {
-                headers: {
-                    Accept: 'application/json',
-                },
-                params: {
-                    access_token: accessToken
-                }
-            });
-        if (result.error)
-            throw result.error;
-        return result.data;
-    };
-}) ();
+    if (response.data.error) { // if the http response was a json object with an error attribute
+        throw new Error("Failed to complete OAuth handshake with Harvest. " + response.data.error);
+    } else {
+        return {
+            accessToken: response.data.access_token,
+            refreshToken: response.data.refresh_token,
+            expiresIn: response.data.expires_in
+        };
+    }
+};
+
+var getIdentity = function (accessToken) {
+    var result = Meteor.http.get(
+        "https://api.harvestapp.com/account/who_am_i", {
+            headers: {
+                Accept: 'application/json',
+            },
+            params: {
+                access_token: accessToken
+            }
+        });
+
+    if (result.error)
+        throw result.error;
+    return result.data;
+};
+
+
+Harvest.retrieveCredential = function(credentialToken, credentialSecret) {
+    return OAuth.retrieveCredential(credentialToken, credentialSecret);
+};
