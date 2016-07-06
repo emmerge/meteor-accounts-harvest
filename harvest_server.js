@@ -4,9 +4,7 @@ OAuth.registerService('harvest', 2, null, function(query) {
 
     var tokens = getTokens(query);
     var identity = getIdentity(tokens.accessToken);
-
-    console.log(identity);
-
+    
     ret = {
         serviceData: {
             id: identity.user.id,
